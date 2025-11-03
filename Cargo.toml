@@ -1,0 +1,18 @@
+[package]
+name = "markdown-viewer"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "mdview"
+path = "src/main.rs"
+
+[dependencies]
+comrak = { version = "0.21", default-features = false, features = ["syntect"] }
+syntect = "5.3"
+notify = "6.1"
+clap = { version = "4.5", features = ["derive"] }
+tiny_http = "0.12"
+open = "5.0"
+crossbeam-channel = "0.5"
+ctrlc = "3.4"
