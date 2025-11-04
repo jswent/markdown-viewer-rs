@@ -111,13 +111,12 @@ impl MarkdownServer {
             match reload_rx.recv_timeout(Duration::from_secs(30)) {
                 Ok(_) => {
                     // File changed, send reload event
-                    if let Err(e) = write!(stream, "data: reload\n\n") {
-                        // Connection closed
-                        eprintln!("SSE write error: {}", e);
+                    if write!(stream, "data: reload\n\n").is_err() {
+                        // Connection closed by client
                         break;
                     }
-                    if let Err(e) = stream.flush() {
-                        eprintln!("SSE flush error: {}", e);
+                    if stream.flush().is_err() {
+                        // Connection closed by client
                         break;
                     }
                 }
