@@ -86,9 +86,6 @@ fn main() {
     // Create channel for reload signals
     let (reload_tx, reload_rx) = unbounded();
 
-    // Create the server
-    let server = Arc::new(MarkdownServer::new(initial_html, reload_rx));
-
     // Get absolute path for the file
     let file_path = match args.file.canonicalize() {
         Ok(p) => p,
@@ -99,6 +96,23 @@ fn main() {
     };
 
     let file_path_arc = Arc::from(file_path.as_path());
+
+    // Extract directory containing the markdown file
+    let base_dir = match file_path.parent() {
+        Some(dir) => Arc::from(dir),
+        None => {
+            eprintln!("Error: Could not determine parent directory");
+            std::process::exit(1);
+        }
+    };
+
+    // Create the server
+    let server = Arc::new(MarkdownServer::new(
+        initial_html,
+        reload_rx,
+        base_dir,
+        file_path_arc,
+    ));
 
     // Print serving information
     println!("Serving '{}' at http://localhost:{}", filename, port);
@@ -128,7 +142,7 @@ fn main() {
     println!("Press Ctrl+C to stop the server");
 
     // Run the server (blocks here)
-    if let Err(e) = run_server(port, server, file_path_arc) {
+    if let Err(e) = run_server(port, server) {
         eprintln!("Server error: {}", e);
         std::process::exit(1);
     }
