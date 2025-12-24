@@ -38,15 +38,93 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
         {content}
     </div>
     <script>
-        const eventSource = new EventSource('/events');
-        eventSource.onmessage = (event) => {{
-            if (event.data === 'reload') {{
-                location.reload();
+        (function() {{
+            let eventSource = null;
+            let reconnectAttempts = 0;
+            let lastMessageTime = Date.now();
+            let connectionCheckInterval = null;
+            const MAX_RECONNECT_DELAY = 30000; // 30 seconds max delay
+            const CONNECTION_TIMEOUT = 30000; // 30s without message = dead connection
+            const KEEPALIVE_CHECK_INTERVAL = 5000; // Check every 5 seconds
+
+            function connect() {{
+                // Close existing connection if any
+                if (eventSource) {{
+                    eventSource.close();
+                    eventSource = null;
+                }}
+
+                console.log('Connecting to SSE...');
+                eventSource = new EventSource('/events');
+
+                eventSource.onopen = function() {{
+                    console.log('SSE connected');
+                    reconnectAttempts = 0;
+                    lastMessageTime = Date.now();
+                }};
+
+                eventSource.onmessage = function(event) {{
+                    lastMessageTime = Date.now();
+                    if (event.data === 'reload') {{
+                        console.log('Reload signal received');
+                        location.reload();
+                    }} else if (event.data === 'keepalive') {{
+                        // Keepalive received - connection is healthy
+                        console.log('Keepalive received');
+                    }}
+                }};
+
+                eventSource.onerror = function(error) {{
+                    console.log('SSE error, connection state:', eventSource.readyState);
+
+                    // readyState: 0 = CONNECTING, 1 = OPEN, 2 = CLOSED
+                    if (eventSource.readyState === EventSource.CLOSED) {{
+                        reconnect();
+                    }}
+                }};
             }}
-        }};
-        eventSource.onerror = () => {{
-            console.log('SSE connection error, will retry...');
-        }};
+
+            function reconnect() {{
+                if (eventSource) {{
+                    eventSource.close();
+                    eventSource = null;
+                }}
+
+                // Exponential backoff with max delay
+                const delay = Math.min(1000 * Math.pow(2, reconnectAttempts), MAX_RECONNECT_DELAY);
+                reconnectAttempts++;
+
+                console.log('Reconnecting in ' + delay + 'ms (attempt ' + reconnectAttempts + ')...');
+                setTimeout(connect, delay);
+            }}
+
+            function checkConnectionHealth() {{
+                const timeSinceLastMessage = Date.now() - lastMessageTime;
+
+                // If we haven't received ANY message (keepalive or reload) in 30s, connection is dead
+                if (timeSinceLastMessage > CONNECTION_TIMEOUT) {{
+                    console.log('Connection appears dead (no messages for ' +
+                                Math.round(timeSinceLastMessage / 1000) + 's), forcing reconnection...');
+                    reconnect();
+                }}
+            }}
+
+            // Start connection
+            connect();
+
+            // Periodically check connection health
+            connectionCheckInterval = setInterval(checkConnectionHealth, KEEPALIVE_CHECK_INTERVAL);
+
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function() {{
+                if (connectionCheckInterval) {{
+                    clearInterval(connectionCheckInterval);
+                }}
+                if (eventSource) {{
+                    eventSource.close();
+                }}
+            }});
+        }})();
     </script>
 </body>
 </html>"#,

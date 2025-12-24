@@ -108,7 +108,7 @@ impl MarkdownServer {
 
         // Keep connection alive and send reload events
         loop {
-            match reload_rx.recv_timeout(Duration::from_secs(30)) {
+            match reload_rx.recv_timeout(Duration::from_secs(15)) {
                 Ok(_) => {
                     // File changed, send reload event
                     if write!(stream, "data: reload\n\n").is_err() {
@@ -121,8 +121,8 @@ impl MarkdownServer {
                     }
                 }
                 Err(_) => {
-                    // Timeout - send keepalive comment
-                    if write!(stream, ": keepalive\n\n").is_err() {
+                    // Timeout - send keepalive as data message so client can detect it
+                    if write!(stream, "data: keepalive\n\n").is_err() {
                         // Connection closed
                         break;
                     }
