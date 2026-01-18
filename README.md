@@ -6,3 +6,4 @@
 - [ ] Add heading navigation
 - [ ] Add copy button to code blocks
 - [x] Add image preview
+- [x] Add background serving
