@@ -2,6 +2,7 @@
 name = "markdown-viewer"
 version = "0.1.0"
 edition = "2021"
+repository = "https://github.com/jswent/markdown-viewer-rs"
 
 [[bin]]
 name = "mdview"
@@ -24,3 +25,8 @@ serde_json = "1.0"
 chrono = { version = "0.4", features = ["serde"] }
 signal-hook = "0.3"
 fs2 = "0.4"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
