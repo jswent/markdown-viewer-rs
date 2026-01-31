@@ -2,8 +2,15 @@
 
 A fast, lightweight markdown viewer with live reload. Preview markdown files in your browser with GitHub styling, automatically refreshing as you edit.
 
-
 ## Installation
+
+**Via shell installer (macOS/Linux):**
+
+```bash
+curl --proto '=https' --tlsv1.2 -LsSf https://github.com/jswent/markdown-viewer-rs/releases/download/v0.0.1/markdown-viewer-installer.sh | sh
+```
+
+### From source
 
 ```bash
 cargo install --path .
@@ -19,16 +26,19 @@ cargo build --release
 ## Usage
 
 **Quick preview** (foreground, Ctrl+C to stop):
+
 ```bash
 mdview README.md
 ```
 
 **Background mode** (keeps your terminal free):
+
 ```bash
 mdview serve README.md
 ```
 
 **Manage background instances**:
+
 ```bash
 mdview list              # Show running viewers
 mdview stop README.md    # Stop a specific viewer
@@ -43,6 +53,7 @@ mdview starts a local HTTP server and watches your file for changes. When you sa
 Background instances are tracked so you can manage them later. Running `serve` on an already-served file will show you the existing URL instead of starting a duplicate.
 
 Logs for background instances are stored in:
+
 - macOS: `~/Library/Application Support/mdview/logs/`
 - Linux: `~/.local/share/mdview/logs/`
 
