@@ -33,7 +33,7 @@ pub fn convert_markdown(content: &str) -> String {
 
     // Configure rendering options
     options.render.github_pre_lang = true;
-    options.render.unsafe_ = false;
+    options.render.unsafe_ = true;
     options.render.hardbreaks = false;
 
     // Parse options
@@ -85,9 +85,12 @@ mod tests {
     fn test_code_block() {
         let md = "```rust\nfn main() {}\n```";
         let html = convert_markdown(md);
-        assert!(html.contains("<pre>"));
-        assert!(html.contains("<code"));
-        assert!(html.contains("fn main()"));
+        // Syntax highlighter outputs <pre lang="rust"...>
+        assert!(html.contains("<pre"), "HTML should contain <pre tag");
+        assert!(html.contains("<code"), "HTML should contain <code tag");
+        // Syntax highlighter wraps tokens in spans, so check for the parts
+        assert!(html.contains("fn"), "HTML should contain 'fn'");
+        assert!(html.contains("main"), "HTML should contain 'main'");
     }
 
     #[test]
