@@ -1,6 +1,7 @@
-use comrak::plugins::syntect::SyntectAdapterBuilder;
 /// Module for converting markdown to HTML using comrak
-use comrak::{markdown_to_html_with_plugins, Options, Plugins};
+use comrak::options::Plugins;
+use comrak::plugins::syntect::SyntectAdapterBuilder;
+use comrak::{markdown_to_html_with_plugins, Options};
 use std::io::Cursor;
 use syntect::highlighting::ThemeSet;
 
@@ -33,7 +34,7 @@ pub fn convert_markdown(content: &str) -> String {
 
     // Configure rendering options
     options.render.github_pre_lang = true;
-    options.render.unsafe_ = true;
+    options.render.r#unsafe = true;
     options.render.hardbreaks = false;
 
     // Parse options
