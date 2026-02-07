@@ -81,8 +81,8 @@ Absolutely. There is definitely work to be done as this was a quick project to s
 
 - [ ] Fix syntax highlighting errors with certain languages (e.g. TypeScript)
 - [ ] Fix light mode code block
-- [ ] Add callout support
-- [ ] Add heading navigation
+- [x] Add callout support
+- [x] Add heading navigation
 - [x] Add copy button to code blocks
 - [x] Add image preview
 - [x] Add background serving

@@ -31,6 +31,7 @@ pub fn convert_markdown(content: &str) -> String {
     options.extension.footnotes = false;
     options.extension.description_lists = false;
     options.extension.front_matter_delimiter = None;
+    options.extension.alerts = true;
 
     // Configure rendering options
     options.render.github_pre_lang = true;
