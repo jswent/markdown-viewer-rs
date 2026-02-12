@@ -24,12 +24,27 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
         html {{
             colors-cheme: light dark;
         }}
+        body {{
+            background-color: #ffffff;
+        }}
+        @media (prefers-color-scheme: dark) {{
+            body {{
+                background-color: #0d1117;
+            }}
+        }}
         .markdown-body {{
             box-sizing: border-box;
             min-width: 200px;
             max-width: 980px;
             margin: 0 auto;
             padding: 45px;
+            border: 1px solid #d1d9e0;
+            border-radius: 8px;
+        }}
+        @media (prefers-color-scheme: dark) {{
+            .markdown-body {{
+                border-color: #3d444d;
+            }}
         }}
         /* Code block container for copy button positioning */
         pre {{
