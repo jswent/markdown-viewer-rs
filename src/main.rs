@@ -56,8 +56,12 @@ enum Commands {
     /// Stop a running background instance
     Stop {
         /// Path to the markdown file
-        #[arg(value_name = "FILE")]
-        file: PathBuf,
+        #[arg(value_name = "FILE", required_unless_present = "all")]
+        file: Option<PathBuf>,
+
+        /// Stop all running instances
+        #[arg(short, long)]
+        all: bool,
     },
 
     /// List all running instances
@@ -445,6 +449,58 @@ fn run_stop(file: &PathBuf) {
     println!("Stopped serving '{}'", file_path.display());
 }
 
+/// Stop all running background instances
+fn run_stop_all() {
+    let mut state = match StateFile::load() {
+        Ok(s) => s,
+        Err(e) => {
+            eprintln!("Error loading state: {}", e);
+            std::process::exit(1);
+        }
+    };
+
+    let instances: Vec<Instance> = state.all_instances().cloned().collect();
+
+    if instances.is_empty() {
+        println!("No running mdview instances");
+        return;
+    }
+
+    for instance in &instances {
+        let pid = Pid::from_raw(instance.pid);
+        match kill(pid, Signal::SIGTERM) {
+            Ok(()) => {
+                println!(
+                    "Stopped '{}' (PID {})",
+                    instance.file_path.display(),
+                    instance.pid
+                );
+            }
+            Err(nix::errno::Errno::ESRCH) => {
+                println!(
+                    "Process {} not running (stale entry), cleaning up",
+                    instance.pid
+                );
+            }
+            Err(e) => {
+                eprintln!(
+                    "Failed to stop process {} for '{}': {}",
+                    instance.pid,
+                    instance.file_path.display(),
+                    e
+                );
+            }
+        }
+    }
+
+    state.instances.clear();
+    if let Err(e) = state.save() {
+        eprintln!("Warning: Could not save state: {}", e);
+    }
+
+    println!("Stopped {} instance(s)", instances.len());
+}
+
 /// List all running instances
 fn run_list(json_output: bool) {
     let mut state = match StateFile::load() {
@@ -516,8 +572,15 @@ fn main() {
         (Some(Commands::Serve { file, no_open }), _) => {
             run_serve(file, *no_open);
         }
-        (Some(Commands::Stop { file }), _) => {
+        (Some(Commands::Stop { all: true, .. }), _) => {
+            run_stop_all();
+        }
+        (Some(Commands::Stop { file: Some(file), .. }), _) => {
             run_stop(file);
+        }
+        (Some(Commands::Stop { file: None, .. }), _) => {
+            eprintln!("Error: provide a FILE or use --all");
+            std::process::exit(1);
         }
         (Some(Commands::List { json }), _) => {
             run_list(*json);
