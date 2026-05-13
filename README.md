@@ -81,7 +81,7 @@ Absolutely. There is definitely work to be done as this was a quick project to s
 
 - [ ] Fix syntax highlighting errors with certain languages (e.g. TypeScript)
 - [ ] Fix light mode code block
-- [ ] Add local caching for styles
+- [x] Inline github-markdown.css
 - [x] Add client-side KaTeX rendering
 - [x] Add callout support
 - [x] Add heading navigation

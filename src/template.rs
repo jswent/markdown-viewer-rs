@@ -1,5 +1,7 @@
 /// Module for generating HTML templates with GitHub-style markdown rendering
 
+const GITHUB_CSS: &str = include_str!("../assets/github-markdown.css");
+
 /// Builds a complete HTML page with GitHub markdown styling and auto-reload functionality
 ///
 /// # Arguments
@@ -19,7 +21,6 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="color-scheme" content="light dark">
     <title>{title}</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
     <link rel="stylesheet" href="/katex/katex.min.css">
     <style>
         html {{
@@ -337,6 +338,7 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
         title = title,
         content = markdown_html
     )
+    .replacen("<style>", &format!("<style>\n{}", GITHUB_CSS), 1)
 }
 
 #[cfg(test)]
@@ -350,7 +352,7 @@ mod tests {
         assert!(html.contains("<h1>Test</h1>"));
         assert!(html.contains("Test Page"));
         assert!(html.contains("EventSource('/events')"));
-        assert!(html.contains("github-markdown.min.css"));
+        assert!(html.contains(".markdown-body"), "missing inlined github-markdown CSS");
         // KaTeX integration
         assert!(html.contains("/katex/katex.min.css"), "missing KaTeX CSS link");
         assert!(html.contains("/katex/katex.min.js"), "missing KaTeX JS script");
