@@ -20,7 +20,7 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
     <meta name="color-scheme" content="light dark">
     <title>{title}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.45/dist/katex.min.css" integrity="sha384-UA8juhPf75SzzAMA/4fo3yOU7sBJ0om7SCD2GHq0fZqZco6tr1UCV7nUbk9J90JM" crossorigin="anonymous">
+    <link rel="stylesheet" href="/katex/katex.min.css">
     <style>
         html {{
             colors-cheme: light dark;
@@ -176,7 +176,7 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
     <div class="markdown-body">
         {content}
     </div>
-    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.45/dist/katex.min.js" integrity="sha384-Tt7wBxLKwSzFVRET4O4U9H6v8MNaQ/CjN2FMP4xFm0ErrFu6aNqoonRVW5W40iGI" crossorigin="anonymous"></script>
+    <script defer src="/katex/katex.min.js"></script>
     <script>
         (function() {{
             let eventSource = null;
@@ -352,8 +352,8 @@ mod tests {
         assert!(html.contains("EventSource('/events')"));
         assert!(html.contains("github-markdown.min.css"));
         // KaTeX integration
-        assert!(html.contains("katex@0.16.45/dist/katex.min.css"), "missing KaTeX CSS link");
-        assert!(html.contains("katex@0.16.45/dist/katex.min.js"), "missing KaTeX JS script");
+        assert!(html.contains("/katex/katex.min.css"), "missing KaTeX CSS link");
+        assert!(html.contains("/katex/katex.min.js"), "missing KaTeX JS script");
         assert!(html.contains("data-math-style"), "missing math render script selector");
         assert!(html.contains("katex.render"), "missing katex.render call");
     }

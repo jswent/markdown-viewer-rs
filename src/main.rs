@@ -1,4 +1,5 @@
 mod daemon;
+mod katex;
 mod markdown;
 mod server;
 mod state;

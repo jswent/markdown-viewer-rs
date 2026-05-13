@@ -1,4 +1,5 @@
 /// Module for HTTP server with Server-Sent Events (SSE) support
+use crate::katex;
 use crate::markdown::convert_markdown;
 use crate::template::build_html_page;
 use crossbeam_channel::Receiver;
@@ -77,6 +78,8 @@ impl MarkdownServer {
 
         if url == "/events" {
             self.handle_sse(request);
+        } else if let Some(rest) = url.strip_prefix("/katex/") {
+            Self::handle_katex(request, rest);
         } else if Self::is_image_request(&url) {
             self.handle_image(request, &url);
         } else {
@@ -214,6 +217,49 @@ impl MarkdownServer {
         let _ = request.respond(response);
     }
 
+    /// Serves bundled KaTeX assets (CSS, JS, fonts)
+    fn handle_katex(request: Request, path: &str) {
+        let (data, content_type) = match path {
+            "katex.min.css" => (katex::CSS, "text/css; charset=utf-8"),
+            "katex.min.js" => (katex::JS, "application/javascript; charset=utf-8"),
+            _ => {
+                if let Some(font_name) = path.strip_prefix("fonts/") {
+                    if let Some((data, mime)) = katex::get_font(font_name) {
+                        (data, mime)
+                    } else {
+                        let response = Response::from_string("404 Not Found")
+                            .with_status_code(404)
+                            .with_header(
+                                Header::from_bytes(&b"Content-Type"[..], &b"text/plain"[..])
+                                    .unwrap(),
+                            );
+                        let _ = request.respond(response);
+                        return;
+                    }
+                } else {
+                    let response = Response::from_string("404 Not Found")
+                        .with_status_code(404)
+                        .with_header(
+                            Header::from_bytes(&b"Content-Type"[..], &b"text/plain"[..]).unwrap(),
+                        );
+                    let _ = request.respond(response);
+                    return;
+                }
+            }
+        };
+
+        let response = Response::from_data(data.to_vec())
+            .with_header(
+                Header::from_bytes(&b"Content-Type"[..], content_type.as_bytes()).unwrap(),
+            )
+            .with_header(
+                Header::from_bytes(&b"Cache-Control"[..], &b"max-age=31536000, immutable"[..])
+                    .unwrap(),
+            );
+
+        let _ = request.respond(response);
+    }
+
     /// Handles Server-Sent Events (SSE) connections for live reload
     ///
     /// This function keeps the connection open and sends reload events when the file changes.
@@ -290,7 +336,7 @@ pub fn run_server(
         std::thread::spawn(move || {
             let url = request.url();
             // Only refresh cache for HTML requests (not SSE or images)
-            if url != "/events" && !MarkdownServer::is_image_request(url) {
+            if url != "/events" && !url.starts_with("/katex/") && !MarkdownServer::is_image_request(url) {
                 server.refresh_cache(&server.file_path);
             }
             server.handle_request(request);
