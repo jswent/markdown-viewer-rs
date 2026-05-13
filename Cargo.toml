@@ -1,6 +1,6 @@
 [package]
 name = "markdown-viewer"
-version = "0.0.3"
+version = "0.0.4"
 edition = "2021"
 repository = "https://github.com/jswent/markdown-viewer-rs"
 
