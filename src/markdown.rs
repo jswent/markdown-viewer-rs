@@ -32,6 +32,7 @@ pub fn convert_markdown(content: &str) -> String {
     options.extension.description_lists = false;
     options.extension.front_matter_delimiter = None;
     options.extension.alerts = true;
+    options.extension.math_dollars = true;
 
     // Configure rendering options
     options.render.github_pre_lang = true;
@@ -107,5 +108,30 @@ mod tests {
         let md = "- [ ] Task 1\n- [x] Task 2";
         let html = convert_markdown(md);
         assert!(html.contains("checkbox"));
+    }
+
+    #[test]
+    fn test_inline_math() {
+        let md = "Inline $x^2$ math.";
+        let html = convert_markdown(md);
+        assert!(
+            html.contains(r#"<span data-math-style="inline">"#),
+            "expected inline math span, got: {html}"
+        );
+        assert!(html.contains("x^2"), "expected raw LaTeX preserved, got: {html}");
+    }
+
+    #[test]
+    fn test_display_math() {
+        let md = "$$\\text{Hit time} + \\text{Miss rate}$$";
+        let html = convert_markdown(md);
+        assert!(
+            html.contains(r#"<span data-math-style="display">"#),
+            "expected display math span, got: {html}"
+        );
+        assert!(
+            html.contains(r"\text{Hit time}"),
+            "expected raw LaTeX preserved, got: {html}"
+        );
     }
 }

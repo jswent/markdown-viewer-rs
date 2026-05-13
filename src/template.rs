@@ -20,6 +20,7 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
     <meta name="color-scheme" content="light dark">
     <title>{title}</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.5.1/github-markdown.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.45/dist/katex.min.css" integrity="sha384-UA8juhPf75SzzAMA/4fo3yOU7sBJ0om7SCD2GHq0fZqZco6tr1UCV7nUbk9J90JM" crossorigin="anonymous">
     <style>
         html {{
             colors-cheme: light dark;
@@ -165,12 +166,17 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
         .markdown-body .markdown-alert-caution .markdown-alert-title::before {{
             background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' width='16' height='16'%3E%3Cpath fill='%23f85149' d='M4.47.22A.749.749 0 0 1 5 0h6c.199 0 .389.079.53.22l4.25 4.25c.141.14.22.331.22.53v6a.749.749 0 0 1-.22.53l-4.25 4.25A.749.749 0 0 1 11 16H5a.749.749 0 0 1-.53-.22L.22 11.53A.749.749 0 0 1 0 11V5c0-.199.079-.389.22-.53Zm.84 1.28L1.5 5.31v5.38l3.81 3.81h5.38l3.81-3.81V5.31L10.69 1.5ZM8 4a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 8 4Zm0 8a1 1 0 1 1 0-2 1 1 0 0 1 0 2Z'/%3E%3C/svg%3E");
         }}
+        /* Hide raw LaTeX in math spans until KaTeX has rendered them */
+        [data-math-style]:not(.katex-rendered) {{
+            visibility: hidden;
+        }}
     </style>
 </head>
 <body>
     <div class="markdown-body">
         {content}
     </div>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.45/dist/katex.min.js" integrity="sha384-Tt7wBxLKwSzFVRET4O4U9H6v8MNaQ/CjN2FMP4xFm0ErrFu6aNqoonRVW5W40iGI" crossorigin="anonymous"></script>
     <script>
         (function() {{
             let eventSource = null;
@@ -300,6 +306,31 @@ pub fn build_html_page(markdown_html: &str, title: &str) -> String {
                 initCopyButtons();
             }}
         }})();
+
+        // KaTeX math rendering
+        (function() {{
+            function renderMath() {{
+                if (typeof katex === 'undefined') {{
+                    console.warn('KaTeX not loaded; math will remain hidden');
+                    return;
+                }}
+                document.querySelectorAll('[data-math-style]').forEach(function(el) {{
+                    var displayMode = el.getAttribute('data-math-style') === 'display';
+                    try {{
+                        katex.render(el.textContent, el, {{ displayMode: displayMode, throwOnError: false }});
+                    }} catch (e) {{
+                        console.error('KaTeX render failed:', e);
+                    }}
+                    el.classList.add('katex-rendered');
+                }});
+            }}
+
+            if (document.readyState === 'loading') {{
+                document.addEventListener('DOMContentLoaded', renderMath);
+            }} else {{
+                renderMath();
+            }}
+        }})();
     </script>
 </body>
 </html>"#,
@@ -320,5 +351,10 @@ mod tests {
         assert!(html.contains("Test Page"));
         assert!(html.contains("EventSource('/events')"));
         assert!(html.contains("github-markdown.min.css"));
+        // KaTeX integration
+        assert!(html.contains("katex@0.16.45/dist/katex.min.css"), "missing KaTeX CSS link");
+        assert!(html.contains("katex@0.16.45/dist/katex.min.js"), "missing KaTeX JS script");
+        assert!(html.contains("data-math-style"), "missing math render script selector");
+        assert!(html.contains("katex.render"), "missing katex.render call");
     }
 }
